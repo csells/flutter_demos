@@ -38,13 +38,13 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
     _demoPages = <Widget>[
       const ChatDemo(),
       const LiveAPIDemo(),
-      ChatDemoNano(key: _chatNanoKey),
       const MultimodalDemo(),
+      ChatDemoNano(key: _chatNanoKey),
     ];
   }
 
   void _onItemTapped(int index) {
-    if (index == 2 && !_nanoPickerHasBeenShown) {
+    if (index == 3 && !_nanoPickerHasBeenShown) {
       _chatNanoKey.currentState?.showModelPicker();
       _nanoPickerHasBeenShown = true;
     }
@@ -56,40 +56,50 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: <Widget>[
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: _onItemTapped,
-            labelType: NavigationRailLabelType.all,
-            destinations: const <NavigationRailDestination>[
-              NavigationRailDestination(
-                icon: Icon(Icons.chat),
-                label: Text('Chat'),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Row(
+            children: <Widget>[
+              NavigationRail(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: _onItemTapped,
+                labelType: constraints.maxWidth < 600
+                    ? NavigationRailLabelType.none
+                    : NavigationRailLabelType.all,
+                destinations: const <NavigationRailDestination>[
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    icon: Icon(Icons.chat),
+                    label: Text('Chat'),
+                  ),
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    icon: Icon(Icons.video_chat),
+                    label: Text('Live API'),
+                  ),
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    icon: Icon(Icons.photo_library),
+                    label: Text('Multimodal\nInput', textAlign: TextAlign.center),
+                  ),
+                  NavigationRailDestination(
+                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    icon: Text('🍌'),
+                    label: Text('Nano\nBanana', textAlign: TextAlign.center),
+                  ),
+                ],
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.video_chat),
-                label: Text('Live API'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.chat),
-                label: Text('Chat (Nano Banana) 🍌'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.photo_library),
-                label: Text('Multimodal'),
+              const VerticalDivider(thickness: 1, width: 1),
+              // This is the main content.
+              Expanded(
+                child: IndexedStack(
+                  index: _selectedIndex,
+                  children: _demoPages,
+                ),
               ),
             ],
-          ),
-          const VerticalDivider(thickness: 1, width: 1),
-          // This is the main content.
-          Expanded(
-            child: IndexedStack(
-              index: _selectedIndex,
-              children: _demoPages,
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
