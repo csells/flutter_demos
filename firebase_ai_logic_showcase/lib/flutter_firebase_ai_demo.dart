@@ -65,21 +65,28 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
               children: _demoPages,
             ),
             bottomNavigationBar: BottomNavigationBar(
-              items: const <BottomNavigationBarItem>[
-                BottomNavigationBarItem(
+              items: <BottomNavigationBarItem>[
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.chat),
                   label: 'Chat',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.video_chat),
                   label: 'Live API',
                 ),
-                BottomNavigationBarItem(
+                const BottomNavigationBarItem(
                   icon: Icon(Icons.photo_library),
                   label: 'Multimodal',
                 ),
                 BottomNavigationBarItem(
-                  icon: Text('🍌'),
+                  icon: RichText(
+                    text: const TextSpan(
+                      style: TextStyle(
+                        fontSize: 24.0,
+                      ),
+                      text: '🍌',
+                    ),
+                  ),
                   label: 'Nano Banana',
                 ),
               ],
@@ -96,26 +103,33 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
                   selectedIndex: _selectedIndex,
                   onDestinationSelected: _onItemTapped,
                   labelType: NavigationRailLabelType.all,
-                  destinations: const <NavigationRailDestination>[
-                    NavigationRailDestination(
+                  destinations: <NavigationRailDestination>[
+                    const NavigationRailDestination(
                       padding: EdgeInsets.symmetric(vertical: 8.0),
                       icon: Icon(Icons.chat),
                       label: Text('Chat'),
                     ),
-                    NavigationRailDestination(
+                    const NavigationRailDestination(
                       padding: EdgeInsets.symmetric(vertical: 8.0),
                       icon: Icon(Icons.video_chat),
                       label: Text('Live API'),
                     ),
-                    NavigationRailDestination(
+                    const NavigationRailDestination(
                       padding: EdgeInsets.symmetric(vertical: 8.0),
                       icon: Icon(Icons.photo_library),
                       label: Text('Multimodal\nInput', textAlign: TextAlign.center),
                     ),
                     NavigationRailDestination(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      icon: Text('🍌'),
-                      label: Text('Nano\nBanana', textAlign: TextAlign.center),
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      icon: RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            fontSize: 24.0,
+                          ),
+                          text: '🍌',
+                        ),
+                      ),
+                      label: const Text('Nano\nBanana', textAlign: TextAlign.center),
                     ),
                   ],
                 ),
