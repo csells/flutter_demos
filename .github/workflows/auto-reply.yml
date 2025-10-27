@@ -19,5 +19,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'Thank you for opening this Pull Request! This repository is for demo purposes only. It's not maintained and there is no CI or merge rules. If you have permissions, you're free to merge the PR without review. If you'd like a review, please explicitly request it.'
+              body: "Thank you for opening this Pull Request! This repository is for demo purposes only. It's not maintained and there is no CI or merge rules. If you have permissions, you're free to merge the PR without review. If you'd like a review, please explicitly request it."
             })
