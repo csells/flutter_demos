@@ -55,52 +55,82 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Row(
-            children: <Widget>[
-              NavigationRail(
-                selectedIndex: _selectedIndex,
-                onDestinationSelected: _onItemTapped,
-                labelType: constraints.maxWidth < 600
-                    ? NavigationRailLabelType.none
-                    : NavigationRailLabelType.all,
-                destinations: const <NavigationRailDestination>[
-                  NavigationRailDestination(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    icon: Icon(Icons.chat),
-                    label: Text('Chat'),
-                  ),
-                  NavigationRailDestination(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    icon: Icon(Icons.video_chat),
-                    label: Text('Live API'),
-                  ),
-                  NavigationRailDestination(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    icon: Icon(Icons.photo_library),
-                    label: Text('Multimodal\nInput', textAlign: TextAlign.center),
-                  ),
-                  NavigationRailDestination(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    icon: Text('🍌'),
-                    label: Text('Nano\nBanana', textAlign: TextAlign.center),
-                  ),
-                ],
-              ),
-              const VerticalDivider(thickness: 1, width: 1),
-              // This is the main content.
-              Expanded(
-                child: IndexedStack(
-                  index: _selectedIndex,
-                  children: _demoPages,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 600) {
+          // Use BottomNavigationBar for smaller screens
+          return Scaffold(
+            body: IndexedStack(
+              index: _selectedIndex,
+              children: _demoPages,
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.chat),
+                  label: 'Chat',
                 ),
-              ),
-            ],
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.video_chat),
+                  label: 'Live API',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.photo_library),
+                  label: 'Multimodal',
+                ),
+                BottomNavigationBarItem(
+                  icon: Text('🍌'),
+                  label: 'Nano Banana',
+                ),
+              ],
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
+            ),
           );
-        },
-      ),
+        } else {
+          // Use NavigationRail for larger screens
+          return Scaffold(
+            body: Row(
+              children: <Widget>[
+                NavigationRail(
+                  selectedIndex: _selectedIndex,
+                  onDestinationSelected: _onItemTapped,
+                  labelType: NavigationRailLabelType.all,
+                  destinations: const <NavigationRailDestination>[
+                    NavigationRailDestination(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      icon: Icon(Icons.chat),
+                      label: Text('Chat'),
+                    ),
+                    NavigationRailDestination(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      icon: Icon(Icons.video_chat),
+                      label: Text('Live API'),
+                    ),
+                    NavigationRailDestination(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      icon: Icon(Icons.photo_library),
+                      label: Text('Multimodal\nInput', textAlign: TextAlign.center),
+                    ),
+                    NavigationRailDestination(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      icon: Text('🍌'),
+                      label: Text('Nano\nBanana', textAlign: TextAlign.center),
+                    ),
+                  ],
+                ),
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(
+                  child: IndexedStack(
+                    index: _selectedIndex,
+                    children: _demoPages,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
     );
   }
 }
