@@ -253,7 +253,6 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
       builder: (context, child) {
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
-          appBar: const LiveApiDemoAppBar(),
           body: Column(
             children: [
               Expanded(

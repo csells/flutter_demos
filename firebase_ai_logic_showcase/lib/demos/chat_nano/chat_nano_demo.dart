@@ -182,16 +182,6 @@ class ChatDemoNanoState extends ConsumerState<ChatDemoNano> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Chat (Nano Banana) 🍌'),
-        actions: [
-          IconButton(
-            onPressed: showModelPicker,
-            icon: const Icon(Icons.settings_outlined),
-          ),
-        ],
-      ),
       body: Column(
         children: [
           Expanded(

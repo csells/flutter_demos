@@ -165,10 +165,6 @@ class _ChatDemoState extends ConsumerState<ChatDemo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Chat'),
-      ),
       body: Column(
         children: [
           Expanded(
