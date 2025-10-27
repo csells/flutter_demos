@@ -1,0 +1,23 @@
+name: Auto Reply to New PRs
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write # Grant write permission for creating comments
+    steps:
+      - name: Post Welcome Message
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Thank you for opening this Pull Request! This repository is for demo purposes only. It's not maintained and there is no CI or merge rules. If you have permissions, you're free to merge the PR without review. If you'd like a review, please explicitly request it.'
+            })
