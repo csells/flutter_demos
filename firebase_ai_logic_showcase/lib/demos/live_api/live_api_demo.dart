@@ -255,6 +255,7 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
           backgroundColor: Theme.of(context).colorScheme.surface,
           body: Column(
             children: [
+              const SizedBox(height: 24.0),
               Expanded(
                 child: LiveApiBody(
                   cameraIsActive: _cameraIsActive,
