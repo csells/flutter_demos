@@ -99,7 +99,6 @@ class _MultimodalDemoState extends State<MultimodalDemo> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 24.0),
                 const SizedBox.square(dimension: AppSpacing.s16),
                 FilePromptInput(
                   promptController: promptController,

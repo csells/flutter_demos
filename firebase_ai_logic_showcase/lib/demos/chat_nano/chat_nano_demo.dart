@@ -206,13 +206,13 @@ class ChatDemoNanoState extends ConsumerState<ChatDemoNano> {
               ),
             ),
           ),
-          MessageInputBar(
-            textController: _userTextInputController,
-            loading: _loading,
-            sendMessage: sendMessage,
-            onPickImagePressed: _pickImage,
-          ),
         ],
+      ),
+      bottomNavigationBar: MessageInputBar(
+        textController: _userTextInputController,
+        loading: _loading,
+        sendMessage: sendMessage,
+        onPickImagePressed: _pickImage,
       ),
     );
   }
