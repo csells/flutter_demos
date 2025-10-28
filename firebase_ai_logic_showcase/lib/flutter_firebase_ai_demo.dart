@@ -60,10 +60,7 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
         if (constraints.maxWidth < 600) {
           // Use BottomNavigationBar for smaller screens
           return Scaffold(
-            body: IndexedStack(
-              index: _selectedIndex,
-              children: _demoPages,
-            ),
+            body: IndexedStack(index: _selectedIndex, children: _demoPages),
             bottomNavigationBar: BottomNavigationBar(
               items: <BottomNavigationBarItem>[
                 const BottomNavigationBarItem(
@@ -81,9 +78,7 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
                 BottomNavigationBarItem(
                   icon: RichText(
                     text: const TextSpan(
-                      style: TextStyle(
-                        fontSize: 24.0,
-                      ),
+                      style: TextStyle(fontSize: 24.0),
                       text: '🍌',
                     ),
                   ),
@@ -117,19 +112,20 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
                     const NavigationRailDestination(
                       padding: EdgeInsets.symmetric(vertical: 8.0),
                       icon: Icon(Icons.photo_library),
-                      label: Text('Multimodal\nInput', textAlign: TextAlign.center),
+                      label: Text('Multimodal', textAlign: TextAlign.center),
                     ),
                     NavigationRailDestination(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       icon: RichText(
                         text: const TextSpan(
-                          style: TextStyle(
-                            fontSize: 24.0,
-                          ),
+                          style: TextStyle(fontSize: 24.0),
                           text: '🍌',
                         ),
                       ),
-                      label: const Text('Nano\nBanana', textAlign: TextAlign.center),
+                      label: const Text(
+                        'Nano\nBanana',
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ],
                 ),
