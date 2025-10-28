@@ -255,7 +255,6 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
           backgroundColor: Theme.of(context).colorScheme.surface,
           body: Column(
             children: [
-              const SizedBox(height: 24.0),
               Expanded(
                 child: LiveApiBody(
                   cameraIsActive: _cameraIsActive,
@@ -274,7 +273,9 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
                         : null,
                   ),
                   VideoButton(
-                      isActive: _cameraIsActive, onPressed: toggleVideoStream),
+                    isActive: _cameraIsActive,
+                    onPressed: toggleVideoStream,
+                  ),
                   AudioVisualizer(
                     audioStreamIsActive: _isCallActive,
                     amplitudeStream: audioInput.amplitudeStream,
@@ -283,10 +284,7 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
                     isMuted: audioInput.isPaused,
                     onPressed: _isCallActive ? toggleMuteInput : null,
                   ),
-                  CallButton(
-                    isActive: _isCallActive,
-                    onPressed: toggleCall,
-                  ),
+                  CallButton(isActive: _isCallActive, onPressed: toggleCall),
                 ],
               ),
             ],
