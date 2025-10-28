@@ -1,5 +1,4 @@
 import 'package:firebase_ai/firebase_ai.dart';
-import '../../../shared/function_calling/tools.dart';
 
 var geminiModels = GeminiModelsNano();
 

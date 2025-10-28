@@ -24,7 +24,7 @@ import '../../shared/ui/app_frame.dart';
 import '../../shared/ui/app_spacing.dart';
 import './ui_components/ui_components.dart';
 import './firebaseai_chat_service.dart';
-import 'ui_components/model_picker.dart';
+
 import './models/models.dart';
 
 class ChatDemo extends ConsumerStatefulWidget {
