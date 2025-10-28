@@ -189,13 +189,13 @@ class _ChatDemoState extends ConsumerState<ChatDemo> {
               ),
             ),
           ),
-          MessageInputBar(
-            textController: _userTextInputController,
-            loading: _loading,
-            sendMessage: sendMessage,
-            onPickImagePressed: _pickImage,
-          ),
         ],
+      ),
+      bottomNavigationBar: MessageInputBar(
+        textController: _userTextInputController,
+        loading: _loading,
+        sendMessage: sendMessage,
+        onPickImagePressed: _pickImage,
       ),
     );
   }
