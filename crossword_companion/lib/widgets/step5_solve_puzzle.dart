@@ -112,7 +112,7 @@ class _StepFiveSolvePuzzleState extends State<StepFiveSolvePuzzle>
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.only(bottom: 16),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Wrap(
