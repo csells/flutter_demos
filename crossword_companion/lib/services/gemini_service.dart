@@ -2,20 +2,17 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path;
 
 import '../models/clue.dart';
 import '../models/clue_answer.dart';
 import '../models/crossword_data.dart';
 import '../models/crossword_grid.dart';
 import '../models/grid_cell.dart';
-import '../platform/platform.dart';
 
 class GeminiService {
   GeminiService() {
@@ -28,35 +25,21 @@ class GeminiService {
       ),
     );
 
-    final clueSolverSystemInstructionContent = Content.text(
-      clueSolverSystemInstruction,
-    );
-
-    // The model for solving clues, including functions the model can call to
-    // get more information about potential answers.
-    _clueSolverModelWithFunctions = FirebaseAI.googleAI().generativeModel(
+    // The model for solving clues.
+    _clueSolverModel = FirebaseAI.googleAI().generativeModel(
       model: 'gemini-2.5-flash',
-      systemInstruction: clueSolverSystemInstructionContent,
+      systemInstruction: Content.text(clueSolverSystemInstruction),
       tools: [
-        Tool.functionDeclarations([_getWordMetadataFunction]),
+        Tool.functionDeclarations([
+          _getWordMetadataFunction,
+          _returnResultFunction,
+        ]),
       ],
-    );
-
-    // The model for solving clues, but without the tools and only for returning
-    // the final JSON response with the answer and confidence score.
-    _clueSolverModelWithSchema = FirebaseAI.googleAI().generativeModel(
-      model: 'gemini-2.5-flash',
-      systemInstruction: clueSolverSystemInstructionContent,
-      generationConfig: GenerationConfig(
-        responseMimeType: 'application/json',
-        responseSchema: _clueSolverSchema,
-      ),
     );
   }
 
   late final GenerativeModel _crosswordModel;
-  late final GenerativeModel _clueSolverModelWithFunctions;
-  late final GenerativeModel _clueSolverModelWithSchema;
+  late final GenerativeModel _clueSolverModel;
   StreamSubscription<GenerateContentResponse>? _clueSolverSubscription;
 
   Future<void> cancelCurrentSolve() async {
@@ -64,19 +47,28 @@ class GeminiService {
     _clueSolverSubscription = null;
   }
 
-  static final _clueSolverSchema = Schema(
-    SchemaType.object,
-    properties: {
-      'answer': Schema(SchemaType.string),
-      'confidence': Schema(SchemaType.number),
+  static final _getWordMetadataFunction = FunctionDeclaration(
+    'getWordMetadata',
+    'Gets grammatical metadata for a word, like its part of speech. '
+        'Best used to verify a candidate answer against a clue that implies a '
+        'grammatical constraint.',
+    parameters: {
+      'word': Schema(SchemaType.string, description: 'The word to look up.'),
     },
   );
 
-  static final _getWordMetadataFunction = FunctionDeclaration(
-    'getWordMetadata',
-    'Gets grammatical metadata for a word, like its part of speech. Best used to verify a candidate answer against a clue that implies a grammatical constraint.',
+  static final _returnResultFunction = FunctionDeclaration(
+    'returnResult',
+    'Returns the final result of the clue solving process.',
     parameters: {
-      'word': Schema(SchemaType.string, description: 'The word to look up.'),
+      'answer': Schema(
+        SchemaType.string,
+        description: 'The answer to the clue.',
+      ),
+      'confidence': Schema(
+        SchemaType.number,
+        description: 'The confidence score in the answer from 0.0 to 1.0.',
+      ),
     },
   );
 
@@ -113,6 +105,19 @@ You have a tool to get grammatical information about a word.
 **Function signature:**
 ```json
 ${jsonEncode(_getWordMetadataFunction.toJson())}
+```
+
+### Tool: `returnResult`
+
+You have a tool to return the final result of the clue solving process.
+
+**When to use:**
+- Use this tool when you have a final answer and confidence score to return. You
+  must use this tool exactly once, and only once, to return the final result.
+
+**Function signature:**
+```json
+${jsonEncode(_returnResultFunction.toJson())}
 ```
 ''';
 
@@ -163,34 +168,6 @@ ${jsonEncode(_getWordMetadataFunction.toJson())}
   );
 
   Future<CrosswordData> inferCrosswordData(List<XFile> images) async {
-    // Caching is supported in debug mode on desktop.
-    if (!kIsWeb && kDebugMode && isDesktop()) {
-      try {
-        final paths = images.map((image) => image.path).toList()..sort();
-        final key = paths.join(';').hashCode.toString();
-        final jsonPath = '${path.join(path.dirname(paths.first), key)}.json';
-        final jsonFile = File(jsonPath);
-
-        if (jsonFile.existsSync()) {
-          debugPrint('Found cached crossword data at $jsonPath');
-          final jsonString = await jsonFile.readAsString();
-          return CrosswordData.fromJson(jsonDecode(jsonString));
-        } else {
-          final crosswordData = await _inferCrosswordDataFromApi(images);
-          final jsonString = jsonEncode(crosswordData.toJson());
-          await jsonFile.writeAsString(jsonString);
-          debugPrint('Saved inferred crossword data to $jsonPath');
-          return crosswordData;
-        }
-      } on Exception catch (e) {
-        debugPrint('Error with file-based caching: $e');
-      }
-    }
-
-    return _inferCrosswordDataFromApi(images);
-  }
-
-  Future<CrosswordData> _inferCrosswordDataFromApi(List<XFile> images) async {
     final imageParts = <Part>[];
     for (final image in images) {
       final imageBytes = await image.readAsBytes();
@@ -258,30 +235,37 @@ The JSON schema is as follows: ${jsonEncode(_crosswordSchema.toJson())}
     );
   }
 
+  // Buffer for the result of the clue solving process.
+  final _returnResult = <String, dynamic>{};
+
   Future<ClueAnswer?> solveClue(Clue clue, int length, String pattern) async {
     // Cancel any previous, in-flight request.
     await cancelCurrentSolve();
 
+    // Clear the return result cache; this is where the result will be stored.
+    _returnResult.clear();
+
     // Generate JSON response with functions and schema.
-    final json = await _generateJsonWithFunctionsAndSchema(
-      modelWithFunctions: _clueSolverModelWithFunctions,
-      modelWithSchema: _clueSolverModelWithSchema,
+    await _clueSolverModel.generateContentWithFunctions(
       prompt: getSolverPrompt(clue, length, pattern),
       onFunctionCall: (functionCall) async => switch (functionCall.name) {
-        'getWordMetadata' => await getWordMetadataFromApi(
+        'getWordMetadata' => await _getWordMetadataFromApi(
           functionCall.args['word'] as String,
         ),
+        'returnResult' => _cacheReturnResult(functionCall.args),
         _ => throw Exception('Unknown function call: ${functionCall.name}'),
       },
     );
 
+    assert(_returnResult.isNotEmpty, 'The return result cache is empty.');
     return ClueAnswer(
-      answer: json['answer'] as String,
-      confidence: (json['confidence'] as num).toDouble(),
+      answer: _returnResult['answer'] as String,
+      confidence: (_returnResult['confidence'] as num).toDouble(),
     );
   }
 
-  Future<Map<String, dynamic>> getWordMetadataFromApi(String word) async {
+  // Look up the metadata for a word in the dictionary API.
+  Future<Map<String, dynamic>> _getWordMetadataFromApi(String word) async {
     debugPrint('Looking up metadata for word: "$word"');
     final url = Uri.parse(
       'https://api.dictionaryapi.dev/api/v2/entries/en/${Uri.encodeComponent(word)}',
@@ -291,6 +275,16 @@ The JSON schema is as follows: ${jsonEncode(_crosswordSchema.toJson())}
     return response.statusCode == 200
         ? {'result': jsonDecode(response.body)}
         : {'error': 'Could not find a definition for "$word".'};
+  }
+
+  // Cache the return result of the clue solving process via a function call.
+  // This is how we get JSON responses from the model with functions, since the
+  // model cannot return JSON directly when tools are used.
+  Map<String, dynamic> _cacheReturnResult(Map<String, dynamic> returnResult) {
+    debugPrint('Caching return result: ${jsonEncode(returnResult)}');
+    assert(_returnResult.isEmpty, 'The return result cache is not empty.');
+    _returnResult.addAll(returnResult);
+    return {'status': 'success'};
   }
 
   String getSolverPrompt(Clue clue, int length, String pattern) =>
@@ -308,23 +302,28 @@ Your task is to solve the following crossword clue.
 
 Return your answer and confidence score in the required JSON format.
 ''';
+}
 
-  Future<Map<String, dynamic>> _generateJsonWithFunctionsAndSchema({
-    required GenerativeModel modelWithFunctions,
-    required GenerativeModel modelWithSchema,
+extension on GenerativeModel {
+  Future<String> generateContentWithFunctions({
     required String prompt,
     required Future<Map<String, dynamic>> Function(FunctionCall) onFunctionCall,
   }) async {
-    // 1. Let the model generate a text response with as many function calls as
-    //    it wants. Use a chat session to support multiple request/response
-    //    pairs, which is needed to support function calls. Also, we'll need the
-    //    history to generate the final JSON response with the schema.
-    final chat = modelWithFunctions.startChat();
+    // Use a chat session to support multiple request/response pairs, which is
+    // needed to support function calls.
+    final chat = startChat();
+    final buffer = StringBuffer();
     var response = await chat.sendMessage(Content.text(prompt));
 
     while (true) {
+      // Append the response text to the buffer.
+      buffer.write(response.text ?? '');
+
       // If no function calls were collected, we're done
       if (response.functionCalls.isEmpty) break;
+
+      // Append a newline to separate responses.
+      buffer.write('\n');
 
       // Execute all function calls
       final functionResponses = <FunctionResponse>[];
@@ -349,24 +348,6 @@ Return your answer and confidence score in the required JSON format.
       );
     }
 
-    // 2. Generate the final JSON response with the schema. We do that by
-    //    trimming the last two messages from the history (the last prompt/tool
-    //    response and the last LLM response) and sending it to the model
-    //    without the functions but with the schema. Essentially, we're asking
-    //    the model to generate the response to the last prompt we gave it,
-    //    including all of the function call results (if there are any), and
-    //    then generate the same response again, but this time with the JSON
-    //    schema.
-    final history = chat.history.toList();
-    final lastModelMessage = history.removeLast();
-    final lastUserMessage = history.removeLast();
-    assert(
-      lastUserMessage.role == 'user' || lastUserMessage.role == 'function',
-    );
-    assert(lastModelMessage.role == 'model');
-    final jsonResponse = await modelWithSchema
-        .startChat(history: history)
-        .sendMessage(lastUserMessage);
-    return jsonDecode(jsonResponse.text!) as Map<String, dynamic>;
+    return buffer.toString();
   }
 }

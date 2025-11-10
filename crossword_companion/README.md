@@ -37,8 +37,10 @@ incorrectly, creating a robust feedback loop.
 
 ### Prerequisites
 
-- A Firebase project.
-- The Flutter SDK installed.
+- The [Flutter SDK](https://docs.flutter.dev/install) installed.
+
+- A [Firebase project enabled for
+  Generative AI](https://firebase.google.com/docs/ai-logic/get-started?api=dev).
 
 ### Installation
 
