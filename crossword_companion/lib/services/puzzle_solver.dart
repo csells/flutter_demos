@@ -1,3 +1,7 @@
+// Copyright 2025 The Flutter team. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import '../models/clue.dart';
 import '../models/grid_cell.dart';
 import '../models/todo_item.dart';
