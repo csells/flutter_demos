@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path;
 
@@ -18,7 +19,7 @@ import '../platform/platform.dart';
 
 class GeminiService {
   GeminiService() {
-    _crosswordJsonModel = FirebaseAI.googleAI().generativeModel(
+    _crosswordModel = FirebaseAI.googleAI().generativeModel(
       model: 'gemini-2.5-pro',
       generationConfig: GenerationConfig(
         responseMimeType: 'application/json',
@@ -26,17 +27,31 @@ class GeminiService {
       ),
     );
 
-    _clueSolverJsonModel = FirebaseAI.googleAI().generativeModel(
+    final clueSolverSystemInstructionContent = Content.text(
+      clueSolverSystemInstruction,
+    );
+
+    _clueSolverModelWithFunctions = FirebaseAI.googleAI().generativeModel(
       model: 'gemini-2.5-flash',
+      systemInstruction: clueSolverSystemInstructionContent,
+      tools: [
+        Tool.functionDeclarations([_getWordMetadataFunction]),
+      ],
+    );
+
+    _clueSolverModelWithSchema = FirebaseAI.googleAI().generativeModel(
+      model: 'gemini-2.5-flash',
+      systemInstruction: clueSolverSystemInstructionContent,
       generationConfig: GenerationConfig(
         responseMimeType: 'application/json',
         responseSchema: _clueSolverSchema,
       ),
-      systemInstruction: Content.text(systemInstruction),
     );
   }
-  late final GenerativeModel _crosswordJsonModel;
-  late final GenerativeModel _clueSolverJsonModel;
+
+  late final GenerativeModel _crosswordModel;
+  late final GenerativeModel _clueSolverModelWithFunctions;
+  late final GenerativeModel _clueSolverModelWithSchema;
   StreamSubscription<GenerateContentResponse>? _clueSolverSubscription;
 
   Future<void> cancelCurrentSolve() async {
@@ -52,40 +67,38 @@ class GeminiService {
     },
   );
 
-  String get systemInstruction => '''
-You are an expert crossword puzzle solver. Your goal is to determine the correct word for a given clue based on the provided constraints.
+  static final _getWordMetadataFunction = FunctionDeclaration(
+    'getWordMetadata',
+    'Gets metadata for a word, like its part of speech.',
+    parameters: {
+      'word': Schema(SchemaType.string, description: 'The word to look up.'),
+    },
+  );
+
+  static String get clueSolverSystemInstruction =>
+      '''
+You are an expert crossword puzzle solver.
 
 **Follow these rules at all times:**
 1.  **Prefer Common Words:** Prioritize common English words and proper nouns. Avoid obscure, archaic, or highly technical terms unless the clue strongly implies them.
 2.  **Match the Clue:** Ensure your answer strictly matches the clue's tense, plurality (singular vs. plural), and part of speech.
-3.  **Be Confident:** Provide a confidence score from 0.0 to 1.0 indicating your certainty.
-4.  **Trust the Clue Over the Pattern:** The provided letter pattern is only a suggestion based on other potentially incorrect answers. Your primary goal is to find the best word that fits the **clue text**. If you are confident in an answer that contradicts the provided pattern, you should use that answer.
-5.  **Format Correctly:** You must return your answer in the specified JSON format.
+3.  **Verify Grammatically:** If a clue implies a part of speech, use the `getWordMetadata` tool to verify your candidate answer has the correct part of speech.
+4.  **Be Confident:** Provide a confidence score from 0.0 to 1.0 indicating your certainty.
+5.  **Trust the Clue Over the Pattern:** The provided letter pattern is only a suggestion based on other potentially incorrect answers. Your primary goal is to find the best word that fits the **clue text**. If you are confident in an answer that contradicts the provided pattern, you should use that answer.
+6.  **Format Correctly:** You must return your answer in the specified JSON format.
 
 ---
 
-### Example Task
+### Tool: `getWordMetadata`
 
-Here is an example of a task you will receive:
+You have a tool to get grammatical information about a word.
 
-```
-Your task is to solve the following crossword clue.
+**When to use:**
+- Use this tool when a clue implies a part of speech (e.g., "To run," "An object," "Happily") to confirm your answer matches.
 
-**Clue:** "The opposite of `down`"
-
-**Constraints:**
-- The answer is a **2-letter** word.
-- The current letter pattern is `_P`, where `_` represents an unknown letter.
-
-Return your answer and confidence score in the required JSON format.
-```
-
-### Example Response
-
-Here is the correct response for the example task above:
-
+**Function signature:**
 ```json
-{"answer": "UP", "confidence": 1.0}
+${jsonEncode(_getWordMetadataFunction.toJson())}
 ```
 ''';
 
@@ -183,7 +196,7 @@ The JSON schema is as follows: ${jsonEncode(_crosswordSchema.toJson())}
       ]),
     ];
 
-    final response = await _crosswordJsonModel.generateContent(content);
+    final response = await _crosswordModel.generateContent(content);
 
     final json = jsonDecode(response.text!);
 
@@ -235,43 +248,41 @@ The JSON schema is as follows: ${jsonEncode(_crosswordSchema.toJson())}
     // Cancel any previous, in-flight request.
     await cancelCurrentSolve();
 
-    final prompt = getSolverPrompt(clue, length, pattern);
-    final stream = _clueSolverJsonModel.generateContentStream([
-      Content.text(prompt),
-    ]);
+    // Generate JSON response with functions and schema.
+    final json = await _generateJsonWithFunctionsAndSchema(
+      modelWithFunctions: _clueSolverModelWithFunctions,
+      modelWithSchema: _clueSolverModelWithSchema,
+      prompt: getSolverPrompt(clue, length, pattern),
+      onFunctionCall: (functionCall) async => switch (functionCall.name) {
+        'getWordMetadata' => await getWordMetadataFromApi(
+          functionCall.args['word'] as String,
+        ),
+        _ => throw Exception('Unknown function call: ${functionCall.name}'),
+      },
+    );
 
-    try {
-      final buffer = StringBuffer();
-      _clueSolverSubscription = stream.listen((response) {
-        buffer.write(response.text);
-      });
+    return ClueAnswer(
+      answer: json['answer'] as String,
+      confidence: (json['confidence'] as num).toDouble(),
+    );
+  }
 
-      // Await the subscription to complete.
-      await _clueSolverSubscription!.asFuture<void>();
+  Future<Map<String, dynamic>> getWordMetadataFromApi(String word) async {
+    debugPrint('Looking up metadata for word: "$word"');
+    final url = Uri.parse(
+      'https://api.dictionaryapi.dev/api/v2/entries/en/${Uri.encodeComponent(word)}',
+    );
 
-      final responseText = buffer.toString();
-      if (responseText.isEmpty) return null;
-
-      final json = jsonDecode(responseText) as Map<String, dynamic>;
-      final answer = json['answer'] as String?;
-      final confidence = (json['confidence'] as num?)?.toDouble();
-
-      if (answer == null || confidence == null) return null;
-
-      return ClueAnswer(answer: answer, confidence: confidence);
-    } on Exception catch (e) {
-      // This block will be entered if the subscription is cancelled.
-      debugPrint('Clue solver stream cancelled or failed: $e');
-      return null;
-    } finally {
-      _clueSolverSubscription = null;
-    }
+    final response = await http.get(url);
+    return response.statusCode == 200
+        ? {'result': jsonDecode(response.body)}
+        : {'error': 'Could not find a definition for "$word".'};
   }
 
   String getSolverPrompt(Clue clue, int length, String pattern) =>
-      _buildSolverPrompt(clue, length, pattern);
+      buildSolverPrompt(clue, length, pattern);
 
-  String _buildSolverPrompt(Clue clue, int length, String pattern) =>
+  String buildSolverPrompt(Clue clue, int length, String pattern) =>
       '''
 Your task is to solve the following crossword clue.
 
@@ -283,4 +294,65 @@ Your task is to solve the following crossword clue.
 
 Return your answer and confidence score in the required JSON format.
 ''';
+
+  Future<Map<String, dynamic>> _generateJsonWithFunctionsAndSchema({
+    required GenerativeModel modelWithFunctions,
+    required GenerativeModel modelWithSchema,
+    required String prompt,
+    required Future<Map<String, dynamic>> Function(FunctionCall) onFunctionCall,
+  }) async {
+    // 1. Let the model generate a text response with as many function calls as
+    //    it wants. Use a chat session to support multiple request/response
+    //    pairs, which is needed to support function calls. Also, we'll need the
+    //    history to generate the final JSON response with the schema.
+    final chat = modelWithFunctions.startChat();
+    var response = await chat.sendMessage(Content.text(prompt));
+
+    while (true) {
+      // If no function calls were collected, we're done
+      if (response.functionCalls.isEmpty) break;
+
+      // Execute all function calls
+      final functionResponses = <FunctionResponse>[];
+      for (final functionCall in response.functionCalls) {
+        try {
+          functionResponses.add(
+            FunctionResponse(
+              functionCall.name,
+              await onFunctionCall(functionCall),
+            ),
+          );
+        } catch (ex) {
+          functionResponses.add(
+            FunctionResponse(functionCall.name, {'error': ex.toString()}),
+          );
+        }
+      }
+
+      // Get the next response stream with function results
+      response = await chat.sendMessage(
+        Content.functionResponses(functionResponses),
+      );
+    }
+
+    // 2. Generate the final JSON response with the schema. We do that by
+    //    trimming the last two messages from the history (the last prompt/tool
+    //    response and the last LLM response) and sending it to the model
+    //    without the functions but with the schema. Essentially, we're asking
+    //    the model to generate the response to the last prompt we gave it,
+    //    including all of the function call results (if there are any), and
+    //    then generate the same response again, but this time with the JSON
+    //    schema.
+    final history = chat.history.toList();
+    final lastModelMessage = history.removeLast();
+    final lastUserMessage = history.removeLast();
+    assert(
+      lastUserMessage.role == 'user' || lastUserMessage.role == 'function',
+    );
+    assert(lastModelMessage.role == 'model');
+    final jsonResponse = await modelWithSchema
+        .startChat(history: history)
+        .sendMessage(lastUserMessage);
+    return jsonDecode(jsonResponse.text!) as Map<String, dynamic>;
+  }
 }

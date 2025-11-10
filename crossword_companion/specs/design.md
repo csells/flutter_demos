@@ -51,6 +51,7 @@ This decoupled approach ensures that each part of the state is managed independe
 - **`GeminiService`:** This service handles all communication with the Gemini models. It is configured with the "expert" system prompt for the solver and has methods for:
     - `inferCrosswordData(images)`: Calls `gemini-2.5-pro` to analyze one or more images.
     - `solveClue(clue, length, pattern)`: Calls `gemini-2.5-flash` to get an answer and confidence score for a single clue.
+    - `getWordMetadata(word)`: Calls `gemini-2.5-flash` to get metadata (e.g., part of speech, definition) for a given word.
 - **`PuzzleSolver`:** Contains the business logic for the main solving loop, iterating through clues and coordinating with the `GeminiService`, `PuzzleDataState`, and `PuzzleSolverState` to solve the puzzle.
 
 ## 5. Puzzle Solving Logic
