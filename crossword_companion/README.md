@@ -18,7 +18,7 @@ iOS, web and macOS.
 The application uses a multi-modal Gemini model (`gemini-2.5-pro`) to analyze an
 image of a crossword puzzle. It then uses a separate model (`gemini-2.5-flash`),
 configured with a detailed system prompt to act as a crossword "expert", to
-solve the puzzle.
+solve the puzzle. Additionally, the app integrates with an external dictionary API (dictionaryapi.dev) to provide word metadata (e.g., part of speech) when requested by the Gemini model during the solving process. This integration allows the Gemini model to verify grammatical constraints, such as part of speech, for potential answers, thereby improving the accuracy and relevance of its solutions.
 
 The app itself drives the solving process. For each clue, it determines the
 required word length and the current known letter pattern from the grid. It then

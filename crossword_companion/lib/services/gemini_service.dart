@@ -74,7 +74,7 @@ class GeminiService {
 
   static final _getWordMetadataFunction = FunctionDeclaration(
     'getWordMetadata',
-    'Gets metadata for a word, like its part of speech.',
+    'Gets grammatical metadata for a word, like its part of speech. Best used to verify a candidate answer against a clue that implies a grammatical constraint.',
     parameters: {
       'word': Schema(SchemaType.string, description: 'The word to look up.'),
     },
@@ -87,7 +87,7 @@ You are an expert crossword puzzle solver.
 **Follow these rules at all times:**
 1.  **Prefer Common Words:** Prioritize common English words and proper nouns. Avoid obscure, archaic, or highly technical terms unless the clue strongly implies them.
 2.  **Match the Clue:** Ensure your answer strictly matches the clue's tense, plurality (singular vs. plural), and part of speech.
-3.  **Verify Grammatically:** If a clue implies a part of speech, use the `getWordMetadata` tool to verify your candidate answer has the correct part of speech.
+3.  **Verify Grammatically:** If a clue implies a specific part of speech (e.g., it's a verb, adverb, or plural), it's a good idea to use the `getWordMetadata` tool to verify your candidate answer matches. However, avoid using it for every clue.
 4.  **Be Confident:** Provide a confidence score from 0.0 to 1.0 indicating your certainty.
 5.  **Trust the Clue Over the Pattern:** The provided letter pattern is only a suggestion based on other potentially incorrect answers. Your primary goal is to find the best word that fits the **clue text**. If you are confident in an answer that contradicts the provided pattern, you should use that answer.
 6.  **Format Correctly:** You must return your answer in the specified JSON format.
@@ -99,7 +99,16 @@ You are an expert crossword puzzle solver.
 You have a tool to get grammatical information about a word.
 
 **When to use:**
-- Use this tool when a clue implies a part of speech (e.g., "To run," "An object," "Happily") to confirm your answer matches.
+- This tool is most helpful as a verification step after you have a likely answer.
+- Consider using this tool when a clue contains a grammatical hint that could be ambiguous.
+- **Good candidates for verification:**
+    - Clues that seem to be verbs (e.g., "To run," "Waving").
+    - Clues that are adverbs (e.g., "Happily," "Quickly").
+    - Clues that specify a plural form.
+- **Try to avoid using the tool for:**
+    - Simple definitions (e.g., "A small dog").
+    - Fill-in-the-blank clues (e.g., "___ and flow").
+    - Proper nouns (e.g., "Capital of France").
 
 **Function signature:**
 ```json
