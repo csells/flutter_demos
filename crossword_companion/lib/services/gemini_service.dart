@@ -19,6 +19,7 @@ import '../platform/platform.dart';
 
 class GeminiService {
   GeminiService() {
+    // The model for inferring crossword data from images.
     _crosswordModel = FirebaseAI.googleAI().generativeModel(
       model: 'gemini-2.5-pro',
       generationConfig: GenerationConfig(
@@ -31,6 +32,8 @@ class GeminiService {
       clueSolverSystemInstruction,
     );
 
+    // The model for solving clues, including functions the model can call to
+    // get more information about potential answers.
     _clueSolverModelWithFunctions = FirebaseAI.googleAI().generativeModel(
       model: 'gemini-2.5-flash',
       systemInstruction: clueSolverSystemInstructionContent,
@@ -39,6 +42,8 @@ class GeminiService {
       ],
     );
 
+    // The model for solving clues, but without the tools and only for returning
+    // the final JSON response with the answer and confidence score.
     _clueSolverModelWithSchema = FirebaseAI.googleAI().generativeModel(
       model: 'gemini-2.5-flash',
       systemInstruction: clueSolverSystemInstructionContent,
