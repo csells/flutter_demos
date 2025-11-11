@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "775552889844",
+    "project_id": "crossword-companion-b7759",
+    "storage_bucket": "crossword-companion-b7759.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:775552889844:android:cde9d25b42e6c936f03fa1",
+        "android_client_info": {
+          "package_name": "com.example.crossword_companion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDU7JpCA_1eLvlYHa_Y208J3ei46KpkHx8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:775552889844:android:45ff33e8fd39589af03fa1",
+        "android_client_info": {
+          "package_name": "com.example.flutter_crosswo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDU7JpCA_1eLvlYHa_Y208J3ei46KpkHx8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:775552889844:android:8ab2c0fdc70779c3f03fa1",
+        "android_client_info": {
+          "package_name": "com.example.flutter_crossword_companion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDU7JpCA_1eLvlYHa_Y208J3ei46KpkHx8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

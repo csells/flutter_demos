@@ -1,0 +1,31 @@
+name: crossword_companion
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  firebase_ai: ^3.0.0
+  firebase_core: ^4.0.0
+  flutter:
+    sdk: flutter
+  flutter_svg: ^2.2.1
+  google_fonts: ^6.3.2
+  image_picker: ^1.1.2
+  path: ^1.9.0
+  provider: ^6.1.5
+  uuid: ^4.4.0
+  vector_graphics: ^1.1.0
+  http: ^1.2.1
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/cc-title.svg.vec # compiled SVG
