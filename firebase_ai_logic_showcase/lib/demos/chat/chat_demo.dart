@@ -22,10 +22,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../shared/ui/app_frame.dart';
 import '../../shared/ui/app_spacing.dart';
-import './ui_components/ui_components.dart';
-import './firebaseai_chat_service.dart';
-
-import './models/models.dart';
+import '../../shared/ui/chat_components/ui_components.dart';
+import '../../shared/chat_service.dart';
+import '../../shared/models/models.dart';
 
 class ChatDemo extends ConsumerStatefulWidget {
   const ChatDemo({super.key});

@@ -13,28 +13,11 @@
 // limitations under the License.
 
 import 'package:flutter/material.dart';
-import './message_bubble.dart';
-import './message_widget.dart';
 
-class MessageListView extends StatelessWidget {
-  final List<MessageData> messages;
-  final ScrollController scrollController;
+/// A simple container for the response from the ChatService.
+class ChatResponse {
+  final String? text;
+  final Image? image;
 
-  const MessageListView({
-    super.key,
-    required this.messages,
-    required this.scrollController,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      controller: scrollController,
-      itemCount: messages.length,
-      itemBuilder: (context, idx) {
-        final message = messages[idx];
-        return MessageBubble(message: message);
-      },
-    );
-  }
+  ChatResponse({this.text, this.image});
 }

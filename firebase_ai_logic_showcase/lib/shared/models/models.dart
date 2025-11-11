@@ -12,7 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export 'attachment_preview.dart';
-export 'message_input_bar.dart';
-export 'message_list_view.dart';
-export 'message_widget.dart';
+export './chat_response.dart';
+export './gemini_model.dart';

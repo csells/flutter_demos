@@ -22,10 +22,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../shared/ui/app_frame.dart';
 import '../../shared/ui/app_spacing.dart';
-import './ui_components/ui_components.dart';
-import './firebaseai_chat_service.dart';
-import 'ui_components/model_picker.dart';
-import './models/gemini_model_nano.dart';
+import '../../shared/ui/chat_components/ui_components.dart';
+import '../../shared/chat_service.dart';
+import '../../shared/ui/chat_components/model_picker.dart';
+import '../../shared/models/models.dart';
 
 class ChatDemoNano extends ConsumerStatefulWidget {
   const ChatDemoNano({super.key});
@@ -36,7 +36,7 @@ class ChatDemoNano extends ConsumerStatefulWidget {
 
 class ChatDemoNanoState extends ConsumerState<ChatDemoNano> {
   // Service for interacting with the Gemini API.
-  late final ChatServiceNano _chatService;
+  late final ChatService _chatService;
 
   // UI State
   final List<MessageData> _messages = <MessageData>[];
@@ -50,7 +50,7 @@ class ChatDemoNanoState extends ConsumerState<ChatDemoNano> {
   @override
   void initState() {
     super.initState();
-    _chatService = ChatServiceNano(ref);
+    _chatService = ChatService(ref);
     geminiModels.selectModel('gemini-2.5-flash-image-preview');
     _chatService.init();
     _userTextInputController.text =
