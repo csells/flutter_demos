@@ -23,7 +23,8 @@ import 'utilities/utilities.dart';
 import 'firebaseai_live_api_service.dart';
 
 class LiveAPIDemo extends ConsumerStatefulWidget {
-  const LiveAPIDemo({super.key});
+  const LiveAPIDemo({super.key, this.isSelected = false});
+  final bool isSelected;
 
   @override
   ConsumerState<LiveAPIDemo> createState() => _LiveAPIDemoState();
@@ -36,7 +37,7 @@ class LiveAPIDemo extends ConsumerStatefulWidget {
 /// with the [LiveApiService] and I/O utilities.
 class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
   // Service for interacting with the Gemini API via Firebase AI.
-  late final LiveApiService _liveApiService;
+  late LiveApiService _liveApiService;
 
   // Utilities for handling device I/O.
   late final AudioInput _audioInput = AudioInput();
@@ -46,6 +47,7 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
   // Initialization flags.
   bool _audioIsInitialized = false;
   bool _videoIsInitialized = false;
+  static bool _hasBeenSelected = false;
 
   // UI State flags.
   bool _isConnecting = false; // True when setting up the Gemini session.
@@ -56,13 +58,32 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
   @override
   void initState() {
     super.initState();
-    _liveApiService = LiveApiService(
-      audioOutput: _audioOutput,
-      ref: ref, // Pass the ref to the service
-      onImageLoadingChange: _onImageLoadingChange,
-      onImageGenerated: _onImageGenerated,
-      onError: _showErrorSnackBar,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndInitializeIO();
+    });
+  }
+
+  @override
+  void didUpdateWidget(LiveAPIDemo oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSelected != oldWidget.isSelected) {
+      _checkAndInitializeIO();
+    }
+  }
+
+  Future<void> _checkAndInitializeIO() async {
+    if (widget.isSelected && !_hasBeenSelected) {
+      _hasBeenSelected = true;
+      await _initializeAudio();
+      await _initializeVideo();
+      _liveApiService = LiveApiService(
+        audioOutput: _audioOutput,
+        ref: ref, // Pass the ref to the service
+        onImageLoadingChange: _onImageLoadingChange,
+        onImageGenerated: _onImageGenerated,
+        onError: _showErrorSnackBar,
+      );
+    }
   }
 
   @override
@@ -110,14 +131,6 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
   }
 
   Future<void> startCall() async {
-    // Initialize audio and video streams if they haven't been already.
-    if (!_audioIsInitialized) {
-      await _initializeAudio();
-    }
-    if (!_videoIsInitialized) {
-      await _initializeVideo();
-    }
-
     // Initialize the camera controller here to ensure it's fresh for each call.
     // This prevents a bug where the camera preview freezes on subsequent calls.
     if (_videoIsInitialized) {

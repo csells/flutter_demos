@@ -38,7 +38,7 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
   Widget build(BuildContext context) {
     final List<Widget> demoPages = <Widget>[
       const ChatDemo(),
-      const LiveAPIDemo(),
+      LiveAPIDemo(isSelected: _selectedIndex == 1),
       const MultimodalDemo(),
       ChatDemoNano(isSelected: _selectedIndex == 3),
     ];
