@@ -55,6 +55,22 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final List<({Widget icon, String label, Widget? selectedIcon})> destinations = [
+      (icon: const Icon(Icons.chat), label: 'Chat', selectedIcon: null),
+      (icon: const Icon(Icons.video_chat), label: 'Live API', selectedIcon: null),
+      (icon: const Icon(Icons.photo_library), label: 'Multimodal', selectedIcon: null),
+      (
+        icon: RichText(
+          text: const TextSpan(
+            style: TextStyle(fontSize: 24.0),
+            text: '🍌',
+          ),
+        ),
+        label: 'Nano Banana',
+        selectedIcon: null
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 600) {
@@ -62,29 +78,16 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
           return Scaffold(
             body: IndexedStack(index: _selectedIndex, children: _demoPages),
             bottomNavigationBar: BottomNavigationBar(
-              items: <BottomNavigationBarItem>[
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.chat),
-                  label: 'Chat',
-                ),
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.video_chat),
-                  label: 'Live API',
-                ),
-                const BottomNavigationBarItem(
-                  icon: Icon(Icons.photo_library),
-                  label: 'Multimodal',
-                ),
-                BottomNavigationBarItem(
-                  icon: RichText(
-                    text: const TextSpan(
-                      style: TextStyle(fontSize: 24.0),
-                      text: '🍌',
+              type: BottomNavigationBarType.fixed,
+              items: destinations
+                  .map(
+                    (e) => BottomNavigationBarItem(
+                      icon: e.icon,
+                      label: e.label,
+                      activeIcon: e.selectedIcon,
                     ),
-                  ),
-                  label: 'Nano Banana',
-                ),
-              ],
+                  )
+                  .toList(),
               currentIndex: _selectedIndex,
               onTap: _onItemTapped,
             ),
@@ -98,36 +101,17 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
                   selectedIndex: _selectedIndex,
                   onDestinationSelected: _onItemTapped,
                   labelType: NavigationRailLabelType.all,
-                  destinations: <NavigationRailDestination>[
-                    const NavigationRailDestination(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      icon: Icon(Icons.chat),
-                      label: Text('Chat'),
-                    ),
-                    const NavigationRailDestination(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      icon: Icon(Icons.video_chat),
-                      label: Text('Live API'),
-                    ),
-                    const NavigationRailDestination(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      icon: Icon(Icons.photo_library),
-                      label: Text('Multimodal', textAlign: TextAlign.center),
-                    ),
-                    NavigationRailDestination(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      icon: RichText(
-                        text: const TextSpan(
-                          style: TextStyle(fontSize: 24.0),
-                          text: '🍌',
+                  destinations: destinations
+                      .map(
+                        (e) => NavigationRailDestination(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          icon: e.icon,
+                          label: Text(e.label.replaceAll(' ', '\n'),
+                              textAlign: TextAlign.center),
+                          selectedIcon: e.selectedIcon,
                         ),
-                      ),
-                      label: const Text(
-                        'Nano\nBanana',
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
+                      )
+                      .toList(),
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
                 Expanded(
