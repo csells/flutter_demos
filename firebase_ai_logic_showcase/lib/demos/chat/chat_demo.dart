@@ -44,6 +44,7 @@ class _ChatDemoState extends ConsumerState<ChatDemo> {
   Uint8List? _attachment;
   final ScrollController _scrollController = ScrollController();
   bool _loading = false;
+  static bool _functionCallDialogShown = false;
 
   @override
   void initState() {
@@ -54,9 +55,12 @@ class _ChatDemoState extends ConsumerState<ChatDemo> {
     _userTextInputController.text =
         'Hey Gemini! Can you set the app color to purple?';
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final trigger = await _showFunctionCallDialog();
-      if (mounted && trigger == true) {
-        sendMessage(_userTextInputController.text);
+      if (!_functionCallDialogShown) {
+        _functionCallDialogShown = true;
+        final trigger = await _showFunctionCallDialog();
+        if (mounted && trigger == true) {
+          sendMessage(_userTextInputController.text);
+        }
       }
     });
   }

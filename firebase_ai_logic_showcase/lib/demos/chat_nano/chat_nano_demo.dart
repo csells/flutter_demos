@@ -28,7 +28,8 @@ import '../../shared/ui/chat_components/model_picker.dart';
 import '../../shared/models/models.dart';
 
 class ChatDemoNano extends ConsumerStatefulWidget {
-  const ChatDemoNano({super.key});
+  const ChatDemoNano({super.key, this.isSelected = false});
+  final bool isSelected;
 
   @override
   ConsumerState<ChatDemoNano> createState() => ChatDemoNanoState();
@@ -46,6 +47,7 @@ class ChatDemoNanoState extends ConsumerState<ChatDemoNano> {
   final ScrollController _scrollController = ScrollController();
   bool _loading = false;
   OverlayPortalController opController = OverlayPortalController();
+  static bool _pickerHasBeenShown = false;
 
   @override
   void initState() {
@@ -55,6 +57,26 @@ class ChatDemoNanoState extends ConsumerState<ChatDemoNano> {
     _chatService.init();
     _userTextInputController.text =
         'Hot air balloons rising over the San Francisco Bay at golden hour with a view of the Golden Gate Bridge. Make it anime style.';
+    _checkAndShowPicker();
+  }
+
+  @override
+  void didUpdateWidget(ChatDemoNano oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSelected != oldWidget.isSelected) {
+      _checkAndShowPicker();
+    }
+  }
+
+  void _checkAndShowPicker() {
+    if (widget.isSelected && !_pickerHasBeenShown) {
+      _pickerHasBeenShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          showModelPicker();
+        }
+      });
+    }
   }
 
   @override

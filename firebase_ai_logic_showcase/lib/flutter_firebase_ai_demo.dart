@@ -27,27 +27,8 @@ class DemoHomeScreen extends StatefulWidget {
 
 class _DemoHomeScreenState extends State<DemoHomeScreen> {
   int _selectedIndex = 0;
-  final GlobalKey<ChatDemoNanoState> _chatNanoKey = GlobalKey();
-  bool _nanoPickerHasBeenShown = false;
-
-  late final List<Widget> _demoPages;
-
-  @override
-  void initState() {
-    super.initState();
-    _demoPages = <Widget>[
-      const ChatDemo(),
-      const LiveAPIDemo(),
-      const MultimodalDemo(),
-      ChatDemoNano(key: _chatNanoKey),
-    ];
-  }
 
   void _onItemTapped(int index) {
-    if (index == 3 && !_nanoPickerHasBeenShown) {
-      _chatNanoKey.currentState?.showModelPicker();
-      _nanoPickerHasBeenShown = true;
-    }
     setState(() {
       _selectedIndex = index;
     });
@@ -55,6 +36,13 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> demoPages = <Widget>[
+      const ChatDemo(),
+      const LiveAPIDemo(),
+      const MultimodalDemo(),
+      ChatDemoNano(isSelected: _selectedIndex == 3),
+    ];
+
     final List<({Widget icon, String label, Widget? selectedIcon})> destinations = [
       (icon: const Icon(Icons.chat), label: 'Chat', selectedIcon: null),
       (icon: const Icon(Icons.video_chat), label: 'Live API', selectedIcon: null),
@@ -76,7 +64,7 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
         if (constraints.maxWidth < 600) {
           // Use BottomNavigationBar for smaller screens
           return Scaffold(
-            body: IndexedStack(index: _selectedIndex, children: _demoPages),
+            body: IndexedStack(index: _selectedIndex, children: demoPages),
             bottomNavigationBar: BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
               items: destinations
@@ -117,7 +105,7 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
                 Expanded(
                   child: IndexedStack(
                     index: _selectedIndex,
-                    children: _demoPages,
+                    children: demoPages,
                   ),
                 ),
               ],
