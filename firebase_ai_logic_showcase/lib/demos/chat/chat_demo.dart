@@ -53,9 +53,40 @@ class _ChatDemoState extends ConsumerState<ChatDemo> {
     _chatService.init();
     _userTextInputController.text =
         'Hey Gemini! Can you set the app color to purple?';
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      sendMessage(_userTextInputController.text);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final trigger = await _showFunctionCallDialog();
+      if (mounted && trigger == true) {
+        sendMessage(_userTextInputController.text);
+      }
     });
+  }
+
+  Future<bool?> _showFunctionCallDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Function Call'),
+          content: const Text(
+            'Do you want to trigger a function call to change app background color?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
