@@ -183,10 +183,6 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
     try {
       await _audioInput.init(); // Initialize Audio Input
       await _audioOutput.init(); // Initialize Audio Output
-
-      setState(() {
-        _audioIsInitialized = true;
-      });
     } catch (e) {
       log("Error during audio initialization: $e");
       if (!mounted) return;
