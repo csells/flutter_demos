@@ -27,6 +27,27 @@ class DemoHomeScreen extends StatefulWidget {
 
 class _DemoHomeScreenState extends State<DemoHomeScreen> {
   int _selectedIndex = 0;
+  final List<({Widget icon, String label, Widget? selectedIcon})> destinations =
+      [
+        (icon: const Icon(Icons.chat), label: 'Chat', selectedIcon: null),
+        (
+          icon: const Icon(Icons.video_chat),
+          label: 'Live API',
+          selectedIcon: null,
+        ),
+        (
+          icon: const Icon(Icons.photo_library),
+          label: 'Multimodal',
+          selectedIcon: null,
+        ),
+        (
+          icon: RichText(
+            text: const TextSpan(style: TextStyle(fontSize: 24.0), text: '🍌'),
+          ),
+          label: 'Nano Banana',
+          selectedIcon: null,
+        ),
+      ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -36,35 +57,12 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> demoPages = <Widget>[
-      const ChatDemo(),
-      LiveAPIDemo(isSelected: _selectedIndex == 1),
-      const MultimodalDemo(),
-      ChatDemoNano(isSelected: _selectedIndex == 3),
-    ];
-
-    final List<({Widget icon, String label, Widget? selectedIcon})> destinations = [
-      (icon: const Icon(Icons.chat), label: 'Chat', selectedIcon: null),
-      (icon: const Icon(Icons.video_chat), label: 'Live API', selectedIcon: null),
-      (icon: const Icon(Icons.photo_library), label: 'Multimodal', selectedIcon: null),
-      (
-        icon: RichText(
-          text: const TextSpan(
-            style: TextStyle(fontSize: 24.0),
-            text: '🍌',
-          ),
-        ),
-        label: 'Nano Banana',
-        selectedIcon: null
-      ),
-    ];
-
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 600) {
           // Use BottomNavigationBar for smaller screens
           return Scaffold(
-            body: IndexedStack(index: _selectedIndex, children: demoPages),
+            body: demoPages[_selectedIndex],
             bottomNavigationBar: BottomNavigationBar(
               type: BottomNavigationBarType.fixed,
               items: destinations
@@ -94,20 +92,17 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
                         (e) => NavigationRailDestination(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           icon: e.icon,
-                          label: Text(e.label.replaceAll(' ', '\n'),
-                              textAlign: TextAlign.center),
+                          label: Text(
+                            e.label.replaceAll(' ', '\n'),
+                            textAlign: TextAlign.center,
+                          ),
                           selectedIcon: e.selectedIcon,
                         ),
                       )
                       .toList(),
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
-                Expanded(
-                  child: IndexedStack(
-                    index: _selectedIndex,
-                    children: demoPages,
-                  ),
-                ),
+                Expanded(child: demoPages[_selectedIndex]),
               ],
             ),
           );
@@ -116,3 +111,10 @@ class _DemoHomeScreenState extends State<DemoHomeScreen> {
     );
   }
 }
+
+final List<Widget> demoPages = <Widget>[
+  const ChatDemo(),
+  LiveAPIDemo(),
+  const MultimodalDemo(),
+  ChatDemoNano(),
+];
