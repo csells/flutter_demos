@@ -23,8 +23,7 @@ import 'utilities/utilities.dart';
 import 'firebaseai_live_api_service.dart';
 
 class LiveAPIDemo extends ConsumerStatefulWidget {
-  const LiveAPIDemo({super.key, this.isSelected = false});
-  final bool isSelected;
+  const LiveAPIDemo({super.key});
 
   @override
   ConsumerState<LiveAPIDemo> createState() => _LiveAPIDemoState();
@@ -45,9 +44,7 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
   late final VideoInput _videoInput = VideoInput();
 
   // Initialization flags.
-  bool _audioIsInitialized = false;
   bool _videoIsInitialized = false;
-  static bool _hasBeenSelected = false;
 
   // UI State flags.
   bool _isConnecting = false; // True when setting up the Gemini session.
@@ -66,24 +63,19 @@ class _LiveAPIDemoState extends ConsumerState<LiveAPIDemo> {
   @override
   void didUpdateWidget(LiveAPIDemo oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isSelected != oldWidget.isSelected) {
-      _checkAndInitializeIO();
-    }
+    _checkAndInitializeIO();
   }
 
   Future<void> _checkAndInitializeIO() async {
-    if (widget.isSelected && !_hasBeenSelected) {
-      _hasBeenSelected = true;
-      await _initializeAudio();
-      await _initializeVideo();
-      _liveApiService = LiveApiService(
-        audioOutput: _audioOutput,
-        ref: ref, // Pass the ref to the service
-        onImageLoadingChange: _onImageLoadingChange,
-        onImageGenerated: _onImageGenerated,
-        onError: _showErrorSnackBar,
-      );
-    }
+    await _initializeAudio();
+    await _initializeVideo();
+    _liveApiService = LiveApiService(
+      audioOutput: _audioOutput,
+      ref: ref, // Pass the ref to the service
+      onImageLoadingChange: _onImageLoadingChange,
+      onImageGenerated: _onImageGenerated,
+      onError: _showErrorSnackBar,
+    );
   }
 
   @override
